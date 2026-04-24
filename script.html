@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LWK_OS // COMMAND_PORTAL</title>
+    <style>
+        :root {
+            --neon: #00ff41;
+            --low-neon: #003b00;
+            --warn: #ff0000;
+            --bg: #050505;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--neon);
+            font-family: 'Courier New', monospace;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            text-transform: uppercase;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.05), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.05));
+            z-index: 100; background-size: 100% 3px, 3px 100%; pointer-events: none;
+        }
+
+        .pane {
+            flex: 1; padding: 30px; display: flex; flex-direction: column;
+            border: 1px solid var(--low-neon); position: relative; overflow-y: auto;
+        }
+
+        .pane-left { border-right: 2px solid var(--neon); max-width: 30%; }
+
+        h2 { font-size: 1.2rem; margin-bottom: 15px; text-shadow: 0 0 8px var(--neon); border-bottom: 1px solid var(--low-neon); }
+
+        .stat-box {
+            border: 1px solid var(--neon); background: rgba(0, 255, 65, 0.1);
+            padding: 10px; margin-bottom: 20px; font-weight: bold; text-align: center;
+        }
+
+        /* Autofill Support Labels */
+        label {
+            display: block;
+            font-size: 0.6rem;
+            margin-bottom: 5px;
+            color: var(--low-neon);
+            letter-spacing: 1px;
+        }
+
+        input {
+            width: 100%; background: #000; border: 1px solid var(--neon);
+            color: var(--neon); padding: 12px; margin-bottom: 15px; outline: none; box-sizing: border-box;
+        }
+
+        /* Chrome Autofill Styling */
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus {
+            -webkit-text-fill-color: var(--neon);
+            -webkit-box-shadow: 0 0 0px 1000px #000 inset;
+            transition: background-color 5000s ease-in-out 0s;
+            border: 1px solid var(--neon);
+        }
+
+        .btn {
+            background: var(--low-neon); color: var(--neon); border: 1px solid var(--neon);
+            padding: 12px; cursor: pointer; width: 100%; font-weight: bold; transition: 0.2s;
+            position: relative; font-size: 0.8rem;
+        }
+
+        .btn:hover { background: var(--neon); color: #000; box-shadow: 0 0 15px var(--neon); }
+
+        .btn-cost {
+            position: absolute; top: -8px; right: 5px; background: #000;
+            padding: 0 5px; font-size: 0.6rem; border: 1px solid var(--neon);
+        }
+
+        .status-terminal {
+            height: 150px; background: rgba(0, 59, 0, 0.1); border: 1px solid var(--low-neon);
+            margin-top: 10px; padding: 10px; font-size: 0.7rem; overflow-y: auto; line-height: 1.4;
+        }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+
+        .ref-list { font-size: 0.7rem; background: rgba(0, 0, 0, 0.5); padding: 10px; border: 1px solid var(--low-neon); }
+        .ref-item { margin-bottom: 8px; word-break: break-all; color: #fff; border-bottom: 1px solid #111; padding-bottom: 4px; }
+        .ref-item span { color: var(--neon); font-weight: bold; }
+
+        #dashboard { opacity: 0.05; pointer-events: none; transition: 0.8s ease; }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: var(--low-neon); }
+    </style>
+</head>
+<body>
+
+    <div class="pane pane-left">
+        <h2>[AUTH_GATE]</h2>
+        <form id="auth_form" onsubmit="event.preventDefault(); authenticate();">
+            <label for="ref_id">MOD_REFERRAL_ID</label>
+            <input type="text" id="ref_id" name="username" autocomplete="username" placeholder="UPLINK_ID" required>
+            
+            <label for="passphrase">ROOT_PASSWORD</label>
+            <input type="password" id="passphrase" name="password" autocomplete="current-password" placeholder="********" required>
+            
+            <button type="submit" class="btn">ESTABLISH_UPLINK</button>
+        </form>
+        
+        <div class="status-terminal" id="term_left">> SYSTEM_READY...</div>
+        
+        <div style="margin-top: 20px; font-size: 0.7rem; color: #666;">
+            [NOTICE]: UNAUTHORIZED ACCESS TO LWK_OS IS LOGGED BY IP.
+        </div>
+    </div>
+
+    <div id="dashboard" class="pane">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h2>[COMMAND_SURFACE]</h2>
+            <div class="stat-box">CREDITS: <span id="credit_count">--</span></div>
+        </div>
+
+        <input type="text" id="msg_input" placeholder="ENTER BROADCAST MESSAGE...">
+
+        <div class="grid">
+            <button class="btn" onclick="trigger('GLITCH')"><span class="btn-cost">5PT</span>INIT: GLITCH</button>
+            <button class="btn" onclick="trigger('INVERT')"><span class="btn-cost">5PT</span>INIT: INVERT</button>
+            <button class="btn" onclick="trigger('THUD')"><span class="btn-cost">5PT</span>INIT: BOOM</button>
+            <button class="btn" onclick="trigger('PARTY')"><span class="btn-cost">5PT</span>INIT: PARTY</button>
+            <button class="btn" style="grid-column: span 2;" onclick="trigger('MESSAGE')"><span class="btn-cost">10PT</span>BROADCAST_MESSAGE</button>
+        </div>
+        
+        <div class="status-terminal" id="term_right">> SYSTEM_LOCKED...</div>
+
+        <div style="margin-top: 20px;">
+            <h2>[RECRUITMENT_PROTOCOL]</h2>
+            <p style="font-size: 0.75rem; margin-bottom: 10px; color: #aaa;">
+                SHARE YOUR UNIQUE UPLINKS BELOW. EVERY UNIQUE USER THAT CLICKS YOUR LINK ADDS 1 CREDIT TO YOUR BALANCE.
+            </p>
+            <div class="ref-list" id="ref_links">
+                AWAITING AUTHENTICATION...
+            </div>
+        </div>
+    </div>
+
+    <script>
+const API = "https://moderators.maxandbudzhaha.workers.dev";
+        const BAD_WORDS = [/fuck/gi, /shit/gi, /nigger/gi, /bitch/gi, /asshole/gi];
+        const COSTS = { GLITCH: 5, INVERT: 5, THUD: 5, PARTY: 5, MESSAGE: 10 };
+        const DOMAINS = [
+            "classroom12.web.app", "classroom12.firebaseapp.com",
+            "lwkregurgitation.web.app", "lwkregurgitation.firebaseapp.com",
+            "m41236.web.app", "m41236.firebaseapp.com",
+            "sharp0.web.app", "sharp0.firebaseapp.com",
+            "thewindmill.web.app", "thewindmill.firebaseapp.com",
+            "whyhello.web.app", "whyhello.firebaseapp.com"
+        ];
+
+        let session = { ref: "", pass: "", credits: 0 };
+
+        function log(side, msg) {
+            const term = document.getElementById(`term_${side}`);
+            term.innerHTML += `<br>> ${msg}`;
+            term.scrollTop = term.scrollHeight;
+        }
+
+        function generateLinks(refId) {
+            const container = document.getElementById('ref_links');
+            container.innerHTML = "";
+            DOMAINS.forEach(dom => {
+                const link = `https://${dom}/?referral=${refId}`;
+                container.innerHTML += `<div class="ref-item"><span>[LINK]</span> ${link}</div>`;
+            });
+        }
+
+        async function authenticate() {
+            session.ref = document.getElementById('ref_id').value;
+            session.pass = document.getElementById('passphrase').value;
+            log('left', "CONNECTING...");
+            
+            try {
+                const res = await fetch(`${API}/api/check-mod?ref=${session.ref}&pass=${session.pass}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    session.credits = data.tokens;
+                    document.getElementById('credit_count').innerText = session.credits;
+                    document.getElementById('dashboard').style.opacity = "1";
+                    document.getElementById('dashboard').style.pointerEvents = "all";
+                    
+                    generateLinks(session.ref);
+                    log('left', "ACCESS_GRANTED.");
+                    log('right', "UPLINK_STABLE.");
+                } else {
+                    log('left', "ERR: ACCESS_DENIED");
+                }
+            } catch (e) { log('left', "ERR: CONNECTION_LOST"); }
+        }
+
+        async function trigger(effect) {
+            const cost = COSTS[effect] || 0;
+
+            // CLIENT-SIDE PRE-FLIGHT CHECK
+            if (session.credits < cost) {
+                log('right', `ERR: INSUFFICIENT_FUNDS (NEED ${cost}PT)`);
+                
+                // Visual feedback: Flash Red
+                const statBox = document.querySelector('.stat-box');
+                const refBox = document.getElementById('ref_links');
+                
+                statBox.style.borderColor = "var(--warn)";
+                refBox.style.borderColor = "var(--warn)";
+                
+                setTimeout(() => {
+                    statBox.style.borderColor = "var(--neon)";
+                    refBox.style.borderColor = "var(--low-neon)";
+                }, 1000);
+
+                return; // Kill the request here
+            }
+
+            let msgText = document.getElementById('msg_input').value;
+            if (effect === 'MESSAGE') {
+                BAD_WORDS.forEach(r => msgText = msgText.replace(r, "[REDACTED]"));
+            }
+
+            log('right', `TRANSMITTING_${effect}...`);
+            
+            try {
+                const url = `${API}/api/trigger?ref=${session.ref}&pass=${session.pass}&effect=${effect}&msg=${encodeURIComponent(msgText)}`;
+                const res = await fetch(url, { mode: 'cors' });
+                const data = await res.json();
+
+                if (res.ok) {
+                    session.credits = data.remaining;
+                    document.getElementById('credit_count').innerText = session.credits;
+                    log('right', `SUCCESS. BAL: ${session.credits}`);
+                    if(effect === 'MESSAGE') document.getElementById('msg_input').value = "";
+                } else {
+                    log('right', `FAILED: ${data.error || "SERVER_REJECTED"}`);
+                }
+            } catch (e) {
+                log('right', "ERR: SIGNAL_INTERRUPTED.");
+            }
+        }
+    </script>
+</body>
+</html>
