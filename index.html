@@ -236,7 +236,7 @@
                     document.getElementById('dashboard').style.pointerEvents = "all";
                     
                     const container = document.getElementById('ref_links');
-                    container.innerHTML = DOMAINS.map(dom => `<div class="ref-item"><span>[LINK]</span> https://${dom}/?referral=${session.ref}</div>`).join('');
+                    container.innerHTML = DOMAINS.map(dom => `<div class="ref-item"><span>[LINK]</span> https://${dom}?referral=${session.ref}</div>`).join('');
                     
                     log('left', "ACCESS_GRANTED.");
                     log('right', "UPLINK_STABLE.");
