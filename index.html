@@ -41,7 +41,7 @@
         .gate-card:hover { border-color: var(--neon); background: rgba(0, 255, 65, 0.1); box-shadow: 0 0 15px var(--neon); }
 
         /* Moderator Portal Styling (Your Specific Styles) */
-        .pane { flex: 1; padding: 30px; display: flex; flex-direction: column; border: 1px solid var(--low-neon); position: relative; overflow-y: auto; }
+        .pane { flex: 1; min-height: 0; padding: 30px; display: flex; flex-direction: column; border: 1px solid var(--low-neon); position: relative; overflow-y: auto; }
         .pane-left { border-right: 2px solid var(--neon); max-width: 30%; }
         h2 { font-size: 1.2rem; margin-bottom: 15px; text-shadow: 0 0 8px var(--neon); border-bottom: 1px solid var(--low-neon); }
         .stat-box { border: 1px solid var(--neon); background: rgba(0, 255, 65, 0.1); padding: 10px; margin-bottom: 20px; font-weight: bold; text-align: center; transition: border-color 0.3s; }
@@ -58,10 +58,17 @@
         .btn-mod { background: var(--low-neon); color: var(--neon); border: 1px solid var(--neon); padding: 12px; cursor: pointer; width: 100%; font-weight: bold; transition: 0.2s; position: relative; font-size: 0.8rem; }
         .btn-mod:hover { background: var(--neon); color: #000; box-shadow: 0 0 15px var(--neon); }
         .btn-cost { position: absolute; top: -8px; right: 5px; background: #000; padding: 0 5px; font-size: 0.6rem; border: 1px solid var(--neon); }
-        .status-terminal { height: 150px; background: rgba(0, 59, 0, 0.1); border: 1px solid var(--low-neon); margin-top: 10px; padding: 10px; font-size: 0.7rem; overflow-y: auto; line-height: 1.4; }
+        .status-terminal { height: 150px; min-height: 150px; flex-shrink: 0; background: rgba(0, 59, 0, 0.1); border: 1px solid var(--low-neon); margin-top: 10px; padding: 10px; font-size: 0.7rem; overflow-y: auto; line-height: 1.4; }
         .ref-list { font-size: 0.7rem; background: rgba(0, 0, 0, 0.5); padding: 10px; border: 1px solid var(--low-neon); transition: border-color 0.3s; }
         .ref-item { margin-bottom: 8px; word-break: break-all; color: #fff; border-bottom: 1px solid #111; padding-bottom: 4px; }
         .ref-item span { color: var(--neon); font-weight: bold; }
+        .mod-panel { border: 1px solid var(--low-neon); background: rgba(0, 255, 65, 0.06); padding: 16px; margin-top: 20px; }
+        * { scrollbar-width: thin; scrollbar-color: var(--neon) #031403; }
+        *::-webkit-scrollbar { width: 12px; height: 12px; }
+        *::-webkit-scrollbar-track { background: #031403; border: 1px solid var(--low-neon); }
+        *::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #0aff57 0%, #057d2f 100%); border: 2px solid #031403; }
+        *::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, #7dffab 0%, #0aff57 100%); }
+        *::-webkit-scrollbar-corner { background: #031403; }
 
         /* Owner View Styling */
         .owner-bg { background: #0b0f1a; color: #e2e8f0; }
@@ -146,6 +153,14 @@
                 <p style="font-size: 0.75rem; margin-bottom: 10px; color: #aaa;">
                     EFFECTS MAY TAKE UP TO 30 SECONDS TO APPEAR!
                 </p>
+            <div class="mod-panel">
+                <h2>[PASSWORD_OVERRIDE]</h2>
+                <label for="current_pass_change">CURRENT_PASSWORD</label>
+                <input type="password" id="current_pass_change" placeholder="CURRENT PASSWORD" class="mod-input">
+                <label for="new_pass_change">NEW_PASSWORD</label>
+                <input type="password" id="new_pass_change" placeholder="NEW PASSWORD" class="mod-input">
+                <button class="btn-mod" onclick="changeOwnPassword()">UPDATE_PASSWORD</button>
+            </div>
             <div style="margin-top: 20px;">
                 <h2>[RECRUITMENT_PROTOCOL]</h2>
                 <p style="font-size: 0.75rem; margin-bottom: 10px; color: #aaa;">
@@ -173,6 +188,8 @@
                     <div class="glass p-4 rounded-xl">
                         <label class="text-[10px] text-slate-500 font-bold">ADD MODERATOR</label>
                         <input type="text" id="newMod" class="w-full bg-slate-800 p-2 text-sm rounded mt-1 mb-2">
+                        <label class="text-[10px] text-slate-500 font-bold">OPTIONAL PASSWORD</label>
+                        <input type="text" id="newModPass" placeholder="Leave blank for random" class="w-full bg-slate-800 p-2 text-sm rounded mt-1 mb-2 text-white">
                         <button onclick="apiCall('add')" class="w-full bg-blue-600 py-2 rounded text-xs font-bold">REGISTER</button>
                     </div>
                     <input type="text" id="search" placeholder="Search..." class="glass w-full p-2 text-sm rounded" oninput="renderList()">
@@ -227,7 +244,8 @@
             session.pass = document.getElementById('passphrase').value;
             log('left', "CONNECTING...");
             try {
-                const res = await freshFetch(`${API}/api/check-mod?ref=${session.ref}&pass=${session.pass}`);
+                const params = new URLSearchParams({ ref: session.ref, pass: session.pass });
+                const res = await freshFetch(`${API}/api/check-mod?${params.toString()}`);
                 if (res.ok) {
                     const data = await res.json();
                     session.credits = data.tokens;
@@ -242,6 +260,38 @@
                     log('right', "UPLINK_STABLE.");
                 } else { log('left', "ERR: ACCESS_DENIED"); }
             } catch (e) { log('left', "ERR: CONNECTION_LOST"); }
+        }
+
+        async function changeOwnPassword() {
+            if (!session.ref || !session.pass) {
+                log('right', "ERR: AUTHENTICATE_FIRST");
+                return;
+            }
+
+            const currentPass = document.getElementById('current_pass_change').value;
+            const newPass = document.getElementById('new_pass_change').value;
+
+            if (!currentPass || !newPass) {
+                log('right', "ERR: PASSWORD_FIELDS_REQUIRED");
+                return;
+            }
+
+            log('right', "UPDATING_PASSWORD...");
+            try {
+                const res = await freshFetch(`${API}/api/mod/change-password?ref=${encodeURIComponent(session.ref)}&currentPass=${encodeURIComponent(currentPass)}&newPass=${encodeURIComponent(newPass)}`);
+                if (!res.ok) {
+                    log('right', "ERR: PASSWORD_UPDATE_FAILED");
+                    return;
+                }
+
+                session.pass = newPass;
+                document.getElementById('passphrase').value = newPass;
+                document.getElementById('current_pass_change').value = "";
+                document.getElementById('new_pass_change').value = "";
+                log('right', "PASSWORD_UPDATED");
+            } catch (e) {
+                log('right', "ERR: PASSWORD_UPDATE_FAILED");
+            }
         }
 
         async function trigger(effect) {
@@ -266,7 +316,8 @@
 
             log('right', `TRANSMITTING_${effect}...`);
             try {
-                const res = await freshFetch(`${API}/api/trigger?ref=${session.ref}&pass=${session.pass}&effect=${effect}&msg=${encodeURIComponent(msgText)}`);
+                const params = new URLSearchParams({ ref: session.ref, pass: session.pass, effect, msg: msgText });
+                const res = await freshFetch(`${API}/api/trigger?${params.toString()}`);
                 const data = await res.json();
                 if (res.ok) {
                     session.credits = data.remaining;
@@ -291,7 +342,10 @@
                 <div class="p-4 flex items-center justify-between hover:bg-slate-800/50 transition">
                     <div>
                         <input type="text" value="${m.ref}" class="bg-transparent border-none font-mono font-bold text-blue-400 p-0 focus:ring-0" onchange="renameMod('${m.ref}', this.value)">
-                        <div class="text-[10px] text-slate-500">PASS: ${m.pass}</div>
+                        <div class="mt-2 flex items-center gap-2">
+                            <span class="text-[10px] text-slate-500">PASS:</span>
+                            <input type="text" id="pass-${m.ref}" value="${m.pass}" class="bg-slate-900 border border-slate-700 px-2 py-1 rounded text-[11px] text-white" onchange="saveEdit('${m.ref}', 'pass')">
+                        </div>
                     </div>
                     <div class="flex items-center gap-4">
                         <input type="number" id="tokens-${m.ref}" value="${m.tokens}" class="bg-transparent border-b border-slate-600 w-16 text-right outline-none text-white font-bold" onchange="saveEdit('${m.ref}', 'tokens')">
@@ -304,21 +358,27 @@
         async function apiCall(action, target = '') {
             const pass = document.getElementById('ownerPass').value;
             const name = target || document.getElementById('newMod').value;
-            await freshFetch(`${WORKER_URL}?action=${action}&target=${name}`, { headers: {'X-Owner-Pass': pass} });
+            const chosenPassword = document.getElementById('newModPass').value;
+            const params = new URLSearchParams({ action, target: name });
+            if (action === 'add' && chosenPassword) params.set('password', chosenPassword);
+            await freshFetch(`${WORKER_URL}?${params.toString()}`, { headers: {'X-Owner-Pass': pass} });
+            if (action === 'add') document.getElementById('newModPass').value = "";
             refresh();
         }
 
         async function saveEdit(ref, key) {
             const pass = document.getElementById('ownerPass').value;
             const val = document.getElementById(`${key}-${ref}`).value;
-            await freshFetch(`${WORKER_URL}?action=edit&target=${ref}&key=${key}&value=${val}`, { headers: {'X-Owner-Pass': pass} });
+            const params = new URLSearchParams({ action: 'edit', target: ref, key, value: val });
+            await freshFetch(`${WORKER_URL}?${params.toString()}`, { headers: {'X-Owner-Pass': pass} });
             refresh();
         }
 
         async function renameMod(oldName, newName) {
             if (oldName === newName || !newName) return;
             const pass = document.getElementById('ownerPass').value;
-            await freshFetch(`${WORKER_URL}?action=rename&target=${oldName}&newName=${newName}`, { headers: {'X-Owner-Pass': pass} });
+            const params = new URLSearchParams({ action: 'rename', target: oldName, newName });
+            await freshFetch(`${WORKER_URL}?${params.toString()}`, { headers: {'X-Owner-Pass': pass} });
             refresh();
         }
     </script>
