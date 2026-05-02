@@ -250,7 +250,22 @@ DETAILS: ${err}
     <script>
         const API = "https://moderators.maxandbudzhaha.workers.dev";
         const WORKER_URL = "https://moderators.maxandbudzhaha.workers.dev/api/owner/manage";
-        const BAD_WORDS = [/fuck/gi, /shit/gi, /nigger/gi, /bitch/gi, /asshole/gi];
+const BAD_WORDS = [
+  /fuck/gi, /shit/gi, /nigger/gi, /bitch/gi, /asshole/gi, /dick/gi, /pussy/gi, /faggot/gi, 
+  /cunt/gi, /retard/gi, /bastard/gi, /slut/gi, /whore/gi, /cum/gi, /nigga/gi, /chink/gi, 
+  /kike/gi, /fag/gi, /motherfucker/gi, /dumbass/gi, /jackass/gi, /piss/gi, /shat/gi, 
+  /tit/gi, /clit/gi, /twat/gi, /cock/gi, /ballsack/gi, /jizz/gi, /dyke/gi, /spic/gi, 
+  /coon/gi, /golliwog/gi, /negro/gi, /boner/gi, /prick/gi, /blowjob/gi, /handjob/gi, 
+  /rimjob/gi, /threesome/gi, /gangbang/gi, /nazi/gi, /hitler/gi, /douche/gi, /wank/gi, 
+  /bollocks/gi, /arse/gi, /bugger/gi, /knob/gi, /tosser/gi, /skank/gi, /coon/gi, 
+  /scrotum/gi, /labia/gi, /testicle/gi, /vagina/gi, /penis/gi, /ejaculate/gi, /orgasm/gi, 
+  /masturbate/gi, /hentai/gi, /porn/gi, /xxx/gi, /erotic/gi, /escort/gi, /slutty/gi, 
+  /pedophile/gi, /beastiality/gi, /incest/gi, /milf/gi, /dilf/gi, /rape/gi, /molest/gi, 
+  /prostitute/gi, /hooker/gi, /felch/gi, /figging/gi, /fisting/gi, /shaved/gi, /queef/gi, 
+  /muff/gi, /rectum/gi, /semen/gi, /sperm/gi, /urethra/gi, /vulva/gi, /deepthroat/gi, 
+  /bukkake/gi, /bareback/gi, /hardcore/gi, /softcore/gi, /voyeur/gi, /fetish/gi, /bdsm/gi, 
+  /bondage/gi, /dominatrix/gi, /sadist/gi, /masochist/gi, /swastika/gi, /nig/gi
+];
         const COSTS = { GLITCH: 5, INVERT: 5, THUD: 5, PARTY: 5, MESSAGE: 10 };
         const DOMAINS = ["classroom12.web.app", "classroom12.firebaseapp.com", "lwkregurgitation.web.app", "lwkregurgitation.firebaseapp.com", "m41236.web.app", "m41236.firebaseapp.com", "sharp0.web.app", "sharp0.firebaseapp.com", "thewindmill.web.app", "thewindmill.firebaseapp.com", "whyhello.web.app", "whyhello.firebaseapp.com", "storage.googleapis.com/lwkintro/index.html", "storage.googleapis.com/lwkintro/index1.html", "storage.googleapis.com/lwkintro/index2.html", "storage.googleapis.com/lwkintro/index3.html", "storage.googleapis.com/lwkintro/index4.html"];
 
@@ -360,7 +375,12 @@ DETAILS: ${err}
 
             log('right', `TRANSMITTING_${effect}...`);
             try {
-                const params = new URLSearchParams({ ref: session.ref, pass: session.pass, effect, msg: msgText });
+const params = new URLSearchParams({ 
+  ref: session.ref, 
+  pass: session.pass, 
+  effect, 
+  msg: `<<${session.ref}>> ${msgText}` 
+});
                 const res = await freshFetch(`${API}/api/trigger?${params.toString()}`);
                 const data = await res.json();
                 if (res.ok) {
